@@ -1,4 +1,4 @@
-
+from htmloutput import HtmlOutput
 import random
 from square import Square
 
@@ -11,6 +11,8 @@ class Genetic:
 
     def __init__(self, sectors, image_count):
         self._sectors = sectors
+        self._html_output = HtmlOutput()
+        self._image_count = image_count
         
     @staticmethod
     def pick_random_parent(data_to_reproduce):
@@ -33,3 +35,19 @@ class Genetic:
                     break
 
             sector.add_to_last_generation(child)
+
+        def run(self):
+            for imageIndex in range(0, self._image_count):
+                for generationIndex in range(0, cant_generations_per_image):
+
+                    if generationIndex % print_delay == 0:
+                        self._html_output.new_generation()
+
+                    for sector in self._sectors:
+                        self.calculate_next_generation(sector, imageIndex)
+
+                    if generationIndex % print_delay == 0:
+                        for sector in self._sectors:
+                            self._html_output.add_in_generation(sector)
+
+            self._html_output.write()
