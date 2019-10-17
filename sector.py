@@ -21,8 +21,8 @@ class Sector:
         self.square_size = self.size / 2
         self.targets_per_image = []
 
-        def get_colors(self):
-            return self._colors
+    def get_colors(self):
+        return self._colors
 
     def calculate_colors(self):
         """
@@ -79,7 +79,7 @@ class Sector:
                 color.set_bit_bounds(int(low_bound), int(high_bound))
                 actual_bit_position = int(high_bound)
                 self._colors[last_key].set_max_bound(2 ** 16 - 1)
-                self._create_first_generation()
+            self._create_first_generation()
 
     def _create_first_generation(self):
         for index in range(0, 3):
@@ -91,3 +91,35 @@ class Sector:
                     break
 
             self.generations[0].append(Square(genes))
+        self.calculate_color_percentages()
+
+    def calculate_color_percentages(self):
+        total = 0
+        for key, color in self._colors.items():
+            total += color.square_count
+        for key, color in self._colors.items():
+            color.genetic_percentage = color.square_count / total
+
+    def get_last_generation(self):
+        return self.generations[len(self.generations) - 1]
+
+    def get_color_distribution(self):
+        return self._colors
+
+    def next_generation(self):
+        self.generations.append([])
+
+    def add_to_last_generation(self, square):
+        self.generations[len(self.generations) - 1].append(square)
+
+    def get_fitness(self, square):
+        genes = square.genes
+        target = 0
+        color_key = ""
+        for key, color in self._colors.items():
+            if color.matches_genes(genes):
+                target = color.target
+                color_key = key
+                break
+
+        return (abs(genes - target) / target), color_key
