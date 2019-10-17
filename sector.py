@@ -1,5 +1,6 @@
 #!encoding=utf-8
-
+from color import Color, get_colors
+import random
 
 class Sector:
 
@@ -17,3 +18,61 @@ class Sector:
         self.size = max_x - min_x
         self.square_size = self.size / 2
         self.targets_per_image = []
+
+        def get_colors(self):
+            return self._colors
+
+    def calculate_colors(self):
+        """
+            Calcula los porcentajes de color de los puntos que se eligieron en el probabilista
+        """
+
+        colors_temp = [get_colors() for _ in range(0, len(self.points))]
+
+        for imageIndex in range(0, len(self.points)):
+
+            count_points = len(self.points[imageIndex])
+
+            if count_points == 0:
+                self._colors["white"].set_probability(1)
+
+            else:
+                cant_colors = 0
+                points_to_evaluate = int(
+                    count_points * (1. / 3.)
+                ) if count_points > 500 else count_points
+
+                points_to_evaluate = points_to_evaluate if points_to_evaluate < 500 else 500
+
+                for pointIndex in range(0, points_to_evaluate):
+                    rand = random.randint(0, count_points - 1)
+
+                    point = self.points[imageIndex][rand]
+                    hls = Color.rgb_to_hls(point[0], point[1], point[2])
+
+                    for key, color in colors_temp[imageIndex].items():
+                        if color.matches(hls):
+                            cant_colors += 1
+                            color.increment_count()
+                            break
+
+                for key, color in colors_temp[imageIndex].items():
+                    color.set_probability(color.cant_points / cant_colors)
+
+                self.targets_per_image = colors_temp
+
+        actual_bit_position = 0
+        last_key = ""
+        image_count = len(colors_temp)
+
+        for key, color in self._colors.items():
+            total_sum = 0
+            for index in range(0, image_count):
+                total_sum += colors_temp[index][key].probability
+
+            if total_sum > 0:
+                last_key = key
+                low_bound = actual_bit_position
+                high_bound = (2 ** 16) * (total_sum / image_count) + low_bound
+                color.set_bit_bounds(int(low_bound), int(high_bound))
+                actual_bit_position = int(high_bound)
