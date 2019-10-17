@@ -1,6 +1,8 @@
 #!encoding=utf-8
 from color import Color, get_colors
 import random
+from square import Square
+
 
 class Sector:
 
@@ -76,3 +78,16 @@ class Sector:
                 high_bound = (2 ** 16) * (total_sum / image_count) + low_bound
                 color.set_bit_bounds(int(low_bound), int(high_bound))
                 actual_bit_position = int(high_bound)
+                self._colors[last_key].set_max_bound(2 ** 16 - 1)
+                self._create_first_generation()
+
+    def _create_first_generation(self):
+        for index in range(0, 3):
+            genes = random.randint(0, 2 ** 16 - 1)
+
+            for key, color in self._colors.items():
+                if color.matches_genes(genes):
+                    color.increase_square_count()
+                    break
+
+            self.generations[0].append(Square(genes))
